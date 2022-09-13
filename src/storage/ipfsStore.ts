@@ -40,7 +40,7 @@ export class IPFSSTORE<CID = any, IPFSCLIENT = any>
             if (!value.value) {
                 throw new Error("Zarr does not exist at CID");
             } else {
-                let jsonKey;
+                let jsonKey = "";
                 let combinedTree = {};
                 // Find the location of the data being addressed. This is done by checking for an area with more than one dimension
                 for (const [key, keyValue] of Object.entries(value.value[".zmetadata"].metadata)) {
@@ -49,16 +49,15 @@ export class IPFSSTORE<CID = any, IPFSCLIENT = any>
                             jsonKey = key.replace("/.zattrs", "");
                         }
                     } catch (error) {
-                        
+                        throw new Error("Error fetching metadata");
                     }
-                };
+                }
                 // To rebuild the tree we assume the data is found 
                 for (const [secondKey, secondKeyValue] of Object.entries(
                     value.value[jsonKey],
                 )) {
                     // If a tree exists we denominate the start of the object with a "/"
                     if (secondKey.includes("/")) {
-                        console.log(secondKey)
                         const newCID = value.value[jsonKey][secondKey];
                         const branch = await this.ipfsClient.dag.get(
                             newCID,
@@ -77,16 +76,14 @@ export class IPFSSTORE<CID = any, IPFSCLIENT = any>
                                 addCodec(Zlib.codecId, () => Zlib);
                             }
                             if (value.value[".zmetadata"].metadata[`${jsonKey}/.zarray`].compressor.id === "blosc") {
-                                console.log("blosc");
                                 addCodec(Zlib.codecId, () => Blosc);
                             } 
                         } catch (error) {
-                            
+                            throw new Error("Error fetching codec");
                         }
                         return value.value[".zmetadata"].metadata[`${jsonKey}/.zarray`];
                     }
                 }
-                console.log(jsonKey);
                 // after the tree has been rebuilt, assign to the directory for parsing later
                 this.directory = combinedTree;         
                 // Ensure a codec is loaded
@@ -99,7 +96,7 @@ export class IPFSSTORE<CID = any, IPFSCLIENT = any>
                         addCodec(Zlib.codecId, () => Blosc);
                     } 
                 } catch (error) {
-                    
+                    throw new Error("Error fetching codec");
                 }
         
                 return value.value[".zmetadata"].metadata[`${jsonKey}/.zarray`];
@@ -129,5 +126,6 @@ export class IPFSSTORE<CID = any, IPFSCLIENT = any>
         if (value) {
             return true;
         }
+        return false;
     }
 }

@@ -12,11 +12,13 @@ export function parseMetadata(
 
     // IPFS returns already parsed object
     if (typeof s === 'object') {
-        return s
+        return s;
     }
     if (typeof s !== 'string') {
         // tslint:disable-next-line: strict-type-predicates
         if (IS_NODE && Buffer.isBuffer(s)) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             return JSON.parse(s.toString());
         } else if (isArrayBufferLike(s)) {
             const utf8Decoder = new TextDecoder();
